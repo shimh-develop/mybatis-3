@@ -7,4 +7,10 @@ package com.shimh;
 public interface BlogMapper {
 
   Blog getById(Integer id);
+
+  void insert(Blog blog);
+
+  void update(Blog blog);
+
+  void deleteById(Integer id);
 }

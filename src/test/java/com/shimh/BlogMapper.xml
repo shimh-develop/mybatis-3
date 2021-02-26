@@ -21,9 +21,24 @@
     "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <mapper namespace="com.shimh.BlogMapper">
+
+  <cache readOnly="true"/>
+
   <select id="getById" resultType="com.shimh.Blog">
     select * from blog where id = #{id}
   </select>
+
+  <insert id="insert">
+    INSERT INTO blog(title) VALUES(#{title})
+  </insert>
+
+  <update id="update">
+    UPDATE blog SET title = #{title} WHERE id = #{id}
+  </update>
+
+  <delete id="deleteById">
+    DELETE FROM blog WHERE id = #{id}
+  </delete>
 
 
 </mapper>

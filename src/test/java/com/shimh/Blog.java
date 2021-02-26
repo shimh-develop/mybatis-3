@@ -1,14 +1,29 @@
 package com.shimh;
 
+import java.io.Serializable;
+
 /**
  * @author: shiminghui
  * @create: 2020年06月
  **/
-public class Blog {
+public class Blog implements Serializable {
 
   private String title;
 
   private Integer id;
+
+  public Blog() {
+  }
+
+
+  public Blog(String title) {
+    this.title = title;
+  }
+
+  public Blog(Integer id, String title) {
+    this.id = id;
+    this.title = title;
+  }
 
   public String getTitle() {
     return title;

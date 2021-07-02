@@ -100,6 +100,7 @@ import org.apache.ibatis.type.TypeHandlerRegistry;
  */
 public class Configuration {
 
+  //s 环境信息 事务管理器 数据源 id
   protected Environment environment;
 
   protected boolean safeRowBoundsEnabled;
@@ -127,6 +128,23 @@ public class Configuration {
   protected AutoMappingBehavior autoMappingBehavior = AutoMappingBehavior.PARTIAL;
   protected AutoMappingUnknownColumnBehavior autoMappingUnknownColumnBehavior = AutoMappingUnknownColumnBehavior.NONE;
 
+
+  /**
+   * 配置文件
+   * <properties resource="org/mybatis/example/config.properties">
+   *   <property name="username" value="dev_user"/>
+   *   <property name="password" value="F2Fa3!33TYyg"/>
+   * </properties>
+   *
+   * 如果一个属性在不只一个地方进行了配置，那么，MyBatis 将按照下面的顺序来加载：
+   *
+   * 首先读取在 properties 元素体内指定的属性。
+   * 然后根据 properties 元素中的 resource 属性读取类路径下属性文件，或根据 url 属性指定的路径读取属性文件，并覆盖之前读取过的同名属性。
+   * 最后读取作为方法参数传递的属性，并覆盖之前读取过的同名属性。
+   * 因此，通过方法参数传递的属性具有最高优先级，resource/url 属性中指定的配置文件次之，最低优先级的则是 properties 元素中指定的属性。
+   *
+   *
+   */
   protected Properties variables = new Properties();
   protected ReflectorFactory reflectorFactory = new DefaultReflectorFactory();
   protected ObjectFactory objectFactory = new DefaultObjectFactory();
@@ -135,6 +153,7 @@ public class Configuration {
   protected boolean lazyLoadingEnabled = false;
   protected ProxyFactory proxyFactory = new JavassistProxyFactory(); // #224 Using internal Javassist instead of OGNL
 
+  //s 从数据源中获取的 数据库标识 和映射文件select、delete的databaseId配合使用
   protected String databaseId;
   /**
    * Configuration factory class.
@@ -145,6 +164,15 @@ public class Configuration {
   protected Class<?> configurationFactory;
 
   protected final MapperRegistry mapperRegistry = new MapperRegistry(this);
+  //s 配置的插件
+  /**
+   * <plugins>
+   *   <plugin interceptor="org.mybatis.example.ExamplePlugin">
+   *     <property name="someProperty" value="100"/>
+   *   </plugin>
+   * </plugins>
+   *
+   */
   protected final InterceptorChain interceptorChain = new InterceptorChain();
   protected final TypeHandlerRegistry typeHandlerRegistry = new TypeHandlerRegistry();
   protected final TypeAliasRegistry typeAliasRegistry = new TypeAliasRegistry();
@@ -161,18 +189,22 @@ public class Configuration {
    * 但 id 重复 获取的时候会报错
    *
    */
-  //s 映射文件中的 <select|update|insert|delete>等 key namespace + id
+  //s 映射文件中的 <select|update|insert|delete>等 key namespace + id  (一个简单的 id 另一个以 namespace 头的完整 id)
   protected final Map<String, MappedStatement> mappedStatements = new StrictMap<MappedStatement>("Mapped Statements collection")
       .conflictMessageProducer((savedValue, targetValue) ->
           ". please check " + savedValue.getResource() + " and " + targetValue.getResource());
   //s 二级缓存 key是映射文件的namespace value是对应的Cache对象
   protected final Map<String, Cache> caches = new StrictMap<>("Caches collection");
-  //s 映射文件中的<resultMap> key namespace + id
+  //s 映射文件中的<resultMap> key namespace + id  (一个简单的 id 另一个以 namespace 头的完整 id)
   protected final Map<String, ResultMap> resultMaps = new StrictMap<>("Result Maps collection");
+
   protected final Map<String, ParameterMap> parameterMaps = new StrictMap<>("Parameter Maps collection");
   protected final Map<String, KeyGenerator> keyGenerators = new StrictMap<>("Key Generators collection");
 
+  //s 映射文件的路径 <mapper resource="org/mybatis/builder/AuthorMapper.xml"/>
   protected final Set<String> loadedResources = new HashSet<>();
+
+  //s <sql> 标签 key namespace + id  (一个简单的 id 另一个以 namespace 头的完整 id)
   protected final Map<String, XNode> sqlFragments = new StrictMap<>("XML fragments parsed from previous mappers");
 
   protected final Collection<XMLStatementBuilder> incompleteStatements = new LinkedList<>();

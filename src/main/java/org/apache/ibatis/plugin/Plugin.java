@@ -41,11 +41,15 @@ public class Plugin implements InvocationHandler {
   }
 
   public static Object wrap(Object target, Interceptor interceptor) {
+    //s target: Executor、StatementHandler、ParameterHandler、ResultSetHandler
     //s 获取用户自定义 terceptor Signature 主解的信息， getSignatureMap （）方法负责
-    // 处理 @Signature 主解
+    // 处理 @Signature 主解 key 接口类  value 被拦截的方法
     Map<Class<?>, Set<Method>> signatureMap = getSignatureMap(interceptor);
+
     Class<?> type = target.getClass();
     Class<?>[] interfaces = getAllInterfaces(type, signatureMap);
+
+    //s 有被拦截的方法 创建代理
     if (interfaces.length > 0) {
       return Proxy.newProxyInstance(
           type.getClassLoader(),
@@ -57,6 +61,11 @@ public class Plugin implements InvocationHandler {
 
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    /**
+     *
+     * 运行时，会调用该方法
+     *
+     */
     try {
       Set<Method> methods = signatureMap.get(method.getDeclaringClass());
       if (methods != null && methods.contains(method)) {

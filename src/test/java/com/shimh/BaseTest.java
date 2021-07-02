@@ -9,12 +9,13 @@ import org.apache.ibatis.datasource.pooled.PooledDataSource;
 import org.apache.ibatis.datasource.unpooled.UnpooledDataSource;
 import org.apache.ibatis.executor.keygen.Jdbc3KeyGenerator;
 import org.apache.ibatis.executor.keygen.KeyGenerator;
+import org.apache.ibatis.io.ClassLoaderWrapper;
+import org.apache.ibatis.io.ResolverUtil;
 import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.io.VFS;
 import org.apache.ibatis.logging.LogFactory;
 import org.apache.ibatis.logging.jdbc.ConnectionLogger;
-import org.apache.ibatis.reflection.DefaultReflectorFactory;
-import org.apache.ibatis.reflection.Reflector;
-import org.apache.ibatis.reflection.ReflectorFactory;
+import org.apache.ibatis.reflection.*;
 import org.apache.ibatis.reflection.factory.DefaultObjectFactory;
 import org.apache.ibatis.reflection.factory.ObjectFactory;
 import org.apache.ibatis.reflection.invoker.GetFieldInvoker;
@@ -28,12 +29,14 @@ import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.ibatis.transaction.Transaction;
+import org.apache.ibatis.transaction.jdbc.JdbcTransaction;
 import org.apache.ibatis.type.*;
 import org.junit.Test;
 
 import java.io.Reader;
 import java.lang.reflect.Type;
 import java.sql.*;
+import java.util.Arrays;
 import java.util.Properties;
 
 /**
@@ -59,6 +62,11 @@ public class BaseTest {
     GetFieldInvoker getFieldInvoker;
     SetFieldInvoker setFieldInvoker;
     MethodInvoker methodInvoker;
+
+
+    TypeParameterResolver resolver;
+
+
     /**
      * 创建指定类型的对象
      * 配置：mybatis-config.xml
@@ -86,6 +94,9 @@ public class BaseTest {
      */
     PropertyCopier propertyCopier;
 
+
+    MetaClass metaClass;
+
   }
 
   @Test
@@ -100,6 +111,9 @@ public class BaseTest {
      * </typeHandlers>
      *
      */
+    JdbcType jdbcType; // SQL类型映射 枚举类用法 提前整个map
+
+
     TypeHandler typeHandler;
     BaseTypeHandler baseTypeHandler;
     TypeHandlerRegistry typeHandlerRegistry;
@@ -142,6 +156,13 @@ public class BaseTest {
 
   @Test
   public void testIo() {
+    //
+    Resources resources;
+    ClassLoaderWrapper wrapper;
+
+    ResolverUtil resolverUtil;
+
+    VFS vfs;
   }
 
   @Test
@@ -164,6 +185,7 @@ public class BaseTest {
      *
      */
     Transaction transaction;
+    JdbcTransaction jdbcTransaction;
   }
 
   @Test
@@ -243,8 +265,12 @@ public class BaseTest {
     SqlSession sqlSession = sqlSessionFactory.openSession();
 
     BlogMapper mapper = sqlSession.getMapper(BlogMapper.class);
-    System.out.println(mapper.getById(1));
+    //System.out.println(mapper.getById(1));
     System.out.println((Blog)sqlSession.selectOne("getById", 1));
+
+    System.out.println(mapper.listBlogs(Arrays.asList(1,2)));
+    sqlSession.commit();
+    sqlSession.rollback();
     sqlSession.close();
   }
 }

@@ -94,9 +94,12 @@ public class DefaultSqlSessionFactory implements SqlSessionFactory {
       final Environment environment = configuration.getEnvironment();
       //s 默认 ManagedTransactionFactory
       final TransactionFactory transactionFactory = getTransactionFactoryFromEnvironment(environment);
+
       //s  通过 Transaction 来获取 Connection commit rollback
       tx = transactionFactory.newTransaction(environment.getDataSource(), level, autoCommit);
+
       final Executor executor = configuration.newExecutor(tx, execType);
+
       return new DefaultSqlSession(configuration, executor, autoCommit);
     } catch (Exception e) {
       closeTransaction(tx); // may have fetched a connection so lets call close()

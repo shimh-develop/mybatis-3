@@ -54,8 +54,11 @@ import org.apache.ibatis.type.TypeHandler;
  */
 public class MapperBuilderAssistant extends BaseBuilder {
 
+  //s <mapper namespace="com.shimh.BlogMapper"> 映射文件的namespace
   private String currentNamespace;
+  //s 配置文件指定的映射文件路径
   private final String resource;
+  //s 命名空间对应的Cache
   private Cache currentCache;
   private boolean unresolvedCacheRef; // issue #676
 
@@ -191,6 +194,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
         throw new IncompleteElementException("Could not find a parent resultmap with id '" + extend + "'");
       }
       ResultMap resultMap = configuration.getResultMap(extend);
+
       List<ResultMapping> extendedResultMappings = new ArrayList<>(resultMap.getResultMappings());
       extendedResultMappings.removeAll(resultMappings);
       // Remove parent constructor if this resultMap declares a constructor.
@@ -206,6 +210,7 @@ public class MapperBuilderAssistant extends BaseBuilder {
       }
       resultMappings.addAll(extendedResultMappings);
     }
+
     ResultMap resultMap = new ResultMap.Builder(configuration, id, type, resultMappings, autoMapping)
         .discriminator(discriminator)
         .build();
@@ -372,13 +377,18 @@ public class MapperBuilderAssistant extends BaseBuilder {
       String foreignColumn,
       boolean lazy) {
     Class<?> javaTypeClass = resolveResultJavaType(resultType, property, javaType);
+    //s 获取 typeHandler 指定的 TypeHandler 对象，底层依赖 typeHandlerRegistry
     TypeHandler<?> typeHandlerInstance = resolveTypeHandler(javaTypeClass, typeHandler);
+
     List<ResultMapping> composites;
+    //s 解析 column 属性佳，当 column是"{ propl=coll prop2=col2 ｝” 形式时， 会解析成 ResultMapping
+    // 对象集合， column 的这种形式主要用于嵌套查询 参数传递
     if ((nestedSelect == null || nestedSelect.isEmpty()) && (foreignColumn == null || foreignColumn.isEmpty())) {
       composites = Collections.emptyList();
     } else {
       composites = parseCompositeColumnName(column);
     }
+
     return new ResultMapping.Builder(configuration, property, column, javaTypeClass)
         .jdbcType(jdbcType)
         .nestedQueryId(applyCurrentNamespace(nestedSelect, true))

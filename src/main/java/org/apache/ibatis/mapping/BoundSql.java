@@ -34,10 +34,13 @@ import org.apache.ibatis.session.Configuration;
  * @author Clinton Begin
  */
 public class BoundSql {
-
+  //s SQL语句 可能含有占位符
   private final String sql;
+  //s 按 ？ 顺序的属性名
   private final List<ParameterMapping> parameterMappings;
+  //s 实际传入的参数
   private final Object parameterObject;
+
   private final Map<String, Object> additionalParameters;
   private final MetaObject metaParameters;
 

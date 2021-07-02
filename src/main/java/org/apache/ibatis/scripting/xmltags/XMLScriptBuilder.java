@@ -64,12 +64,15 @@ public class XMLScriptBuilder extends BaseBuilder {
   }
 
   public SqlSource parseScriptNode() {
-    //s 判断是否是动态SQL 有占位符或动态SQL节点
+    //s 判断是否是动态SQL 有${}占位符或动态SQL节点
+    //s 解析SQL 根据不同的标签创建不同的SqlNode <if> <foreach>
     MixedSqlNode rootSqlNode = parseDynamicTags(context);
     SqlSource sqlSource;
     if (isDynamic) {
+      //s 需等到真正调用时才会解析
       sqlSource = new DynamicSqlSource(configuration, rootSqlNode);
     } else {
+      //s parameterType <select parameterType=""/> 这里就会解析 #{}
       sqlSource = new RawSqlSource(configuration, rootSqlNode, parameterType);
     }
     return sqlSource;

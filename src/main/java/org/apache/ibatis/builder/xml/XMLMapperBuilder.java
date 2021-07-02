@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import com.sun.xml.internal.bind.v2.model.core.ID;
 import org.apache.ibatis.builder.BaseBuilder;
 import org.apache.ibatis.builder.BuilderException;
 import org.apache.ibatis.builder.CacheRefResolver;
@@ -57,6 +58,7 @@ public class XMLMapperBuilder extends BaseBuilder {
   private final XPathParser parser;
   private final MapperBuilderAssistant builderAssistant;
   private final Map<String, XNode> sqlFragments;
+  //s 映射文件名 <mapper resource="org/mybatis/builder/AuthorMapper.xml"/>
   private final String resource;
 
   @Deprecated
@@ -96,7 +98,7 @@ public class XMLMapperBuilder extends BaseBuilder {
       configurationElement(parser.evalNode("/mapper"));
       //s 已加载标识
       configuration.addLoadedResource(resource);
-      //s 映射配置文件与对应 Mapper 接口的绑定（非必须）
+      //s 加载配置文件与namespace对应的Mapper 接口
       bindMapperForNamespace();
     }
     //s 处理失败的
@@ -138,16 +140,22 @@ public class XMLMapperBuilder extends BaseBuilder {
       builderAssistant.setCurrentNamespace(namespace);
 
       cacheRefElement(context.evalNode("cache-ref"));
+
       //s 创建二级缓存 添加到 Configuration 的 caches 属性 key: namespace value: Cache实例
       cacheElement(context.evalNode("cache"));
+
       //s 被废弃了
       parameterMapElement(context.evalNodes("/mapper/parameterMap"));
+
       //s 创建 resultMap 对象
       resultMapElements(context.evalNodes("/mapper/resultMap"));
+
       //s sqlFragments key：id
       sqlElement(context.evalNodes("/mapper/sql"));
+
       //s MappedStatement
       buildStatementFromContext(context.evalNodes("select|insert|update|delete"));
+
     } catch (Exception e) {
       throw new BuilderException("Error parsing Mapper XML. The XML location is '" + resource + "'. Cause: " + e, e);
     }
@@ -343,18 +351,23 @@ public class XMLMapperBuilder extends BaseBuilder {
         resultMapNode.getStringAttribute("ofType",
             resultMapNode.getStringAttribute("resultType",
                 resultMapNode.getStringAttribute("javaType"))));
+
     //s 先用别名typeAliasRegistry解析 不存在 Class.forName 获取 Class
     Class<?> typeClass = resolveClass(type);
     if (typeClass == null) {
       //s 可能是 association 反射获取 其 property
       typeClass = inheritEnclosingType(resultMapNode, enclosingType);
     }
+
     Discriminator discriminator = null;
+
     //s ResultMapping 列和属性的映射关系 除了discriminator
     List<ResultMapping> resultMappings = new ArrayList<>();
+
     resultMappings.addAll(additionalResultMappings);
-    List<XNode> resultChildren = resultMapNode.getChildren();
+
     //s 处理子节点
+    List<XNode> resultChildren = resultMapNode.getChildren();
     for (XNode resultChild : resultChildren) {
       if ("constructor".equals(resultChild.getName())) {
         //s constructor 节点 创建 ResultMapping 对象
@@ -366,11 +379,13 @@ public class XMLMapperBuilder extends BaseBuilder {
         //s 处理 ＜id ＞、＜ result ＞、 ＜association ＞、＜ collection ＞等节点
         List<ResultFlag> flags = new ArrayList<>();
         if ("id".equals(resultChild.getName())) {
+          //s 如果是＜id＞节点，则向 flags 集合中添加 ResultFlag ID
           flags.add(ResultFlag.ID);
         }
         resultMappings.add(buildResultMappingFromContext(resultChild, typeClass, flags));
       }
     }
+
     //s 当前命名空间中的一个唯一标识，用于标识一个结果映射
     String id = resultMapNode.getStringAttribute("id",
             resultMapNode.getValueBasedIdentifier());
@@ -379,6 +394,7 @@ public class XMLMapperBuilder extends BaseBuilder {
     // 这个属性会覆盖全局的属性 autoMappingBehavior。默认值：未设置（unset）
     Boolean autoMapping = resultMapNode.getBooleanAttribute("autoMapping");
     ResultMapResolver resultMapResolver = new ResultMapResolver(builderAssistant, id, typeClass, extend, discriminator, resultMappings, autoMapping);
+
     try {
       //s 创建 ResultMap 对象 设置到 Configuration 的 resultMaps 属性
       return resultMapResolver.resolve();
@@ -413,6 +429,11 @@ public class XMLMapperBuilder extends BaseBuilder {
      */
     List<XNode> argChildren = resultChild.getChildren();
     for (XNode argChild : argChildren) {
+      /**
+       * <idArg column="id" javaType="int" name="id" />
+       * <arg column="age" javaType="_int" name="age" />
+       * <arg column="username" javaType="String" name="username" />
+       */
       List<ResultFlag> flags = new ArrayList<>();
       flags.add(ResultFlag.CONSTRUCTOR);
       if ("idArg".equals(argChild.getName())) {
@@ -504,9 +525,12 @@ public class XMLMapperBuilder extends BaseBuilder {
     String column = context.getStringAttribute("column");
     String javaType = context.getStringAttribute("javaType");
     String jdbcType = context.getStringAttribute("jdbcType");
+
     String nestedSelect = context.getStringAttribute("select");
+
     String nestedResultMap = context.getStringAttribute("resultMap",
         processNestedResultMappings(context, Collections.emptyList(), resultType));
+
     String notNullColumn = context.getStringAttribute("notNullColumn");
     String columnPrefix = context.getStringAttribute("columnPrefix");
     String typeHandler = context.getStringAttribute("typeHandler");

@@ -69,7 +69,7 @@ public class MapperRegistry {
         // It's important that the type is added before the parser is run
         // otherwise the binding may automatically be attempted by the
         // mapper parser. If the type is already known, it won't try.
-        //s 解析注解
+        //s 解析注解@Cache 以及方法上的 @Select 并且查找对应的xml映射文件 解析
         MapperAnnotationBuilder parser = new MapperAnnotationBuilder(config, type);
         parser.parse();
         loadCompleted = true;

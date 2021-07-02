@@ -55,6 +55,7 @@ public class XMLConfigBuilder extends BaseBuilder {
   private boolean parsed;
   //s 用于解析 mybatis config xml 配置文件的 XPathParser 对象
   private final XPathParser parser;
+  //s 方法传入或<environments default="development"> 指定的环境
   private String environment;
   private final ReflectorFactory localReflectorFactory = new DefaultReflectorFactory();
 
@@ -83,6 +84,7 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   private XMLConfigBuilder(XPathParser parser, String environment, Properties props) {
+    //s 创建配置类 将配置类中 typeAliasRegistry  typeHandlerRegistry 赋值给当前builder
     super(new Configuration());
     ErrorContext.instance().resource("SQL Mapper Configuration");
     //s 方法传来的props
@@ -121,6 +123,7 @@ public class XMLConfigBuilder extends BaseBuilder {
 
       //s 解析<plugins> 节点 设置到 Configuration 的 interceptorChain 属性中
       pluginElement(root.evalNode("plugins"));
+
       //s 解析<objectFactory> 节点 设置到 Configuration 的 objectFactory 属性中
       objectFactoryElement(root.evalNode("objectFactory"));
       objectWrapperFactoryElement(root.evalNode("objectWrapperFactory"));
@@ -132,10 +135,13 @@ public class XMLConfigBuilder extends BaseBuilder {
       // read it after objectFactory and objectWrapperFactory issue #631
       //s <environments> 节点 读取 TransactionFactory 和 DataSource 到 Environment 设置到 Configuration 中
       environmentsElement(root.evalNode("environments"));
+
       //s 设置 Configuration 的 databaseId 字段
       databaseIdProviderElement(root.evalNode("databaseIdProvider"));
+
       //s typeHandlerRegistry 注册 typeHandler
       typeHandlerElement(root.evalNode("typeHandlers"));
+
       //s 这里会解析映射文件
       mapperElement(root.evalNode("mappers"));
     } catch (Exception e) {
@@ -144,6 +150,25 @@ public class XMLConfigBuilder extends BaseBuilder {
   }
 
   private Properties settingsAsProperties(XNode context) {
+    /**
+     * <settings>
+     *   <setting name="cacheEnabled" value="true"/>
+     *   <setting name="lazyLoadingEnabled" value="true"/>
+     *   <setting name="multipleResultSetsEnabled" value="true"/>
+     *   <setting name="useColumnLabel" value="true"/>
+     *   <setting name="useGeneratedKeys" value="false"/>
+     *   <setting name="autoMappingBehavior" value="PARTIAL"/>
+     *   <setting name="autoMappingUnknownColumnBehavior" value="WARNING"/>
+     *   <setting name="defaultExecutorType" value="SIMPLE"/>
+     *   <setting name="defaultStatementTimeout" value="25"/>
+     *   <setting name="defaultFetchSize" value="100"/>
+     *   <setting name="safeRowBoundsEnabled" value="false"/>
+     *   <setting name="mapUnderscoreToCamelCase" value="false"/>
+     *   <setting name="localCacheScope" value="SESSION"/>
+     *   <setting name="jdbcTypeForNull" value="OTHER"/>
+     *   <setting name="lazyLoadTriggerMethods" value="equals,clone,hashCode,toString"/>
+     * </settings>
+     */
     if (context == null) {
       return new Properties();
     }
@@ -358,7 +383,9 @@ public class XMLConfigBuilder extends BaseBuilder {
         if (isSpecifiedEnvironment(id)) {
           TransactionFactory txFactory = transactionManagerElement(child.evalNode("transactionManager"));
           DataSourceFactory dsFactory = dataSourceElement(child.evalNode("dataSource"));
+
           DataSource dataSource = dsFactory.getDataSource();
+
           Environment.Builder environmentBuilder = new Environment.Builder(id)
               .transactionFactory(txFactory)
               .dataSource(dataSource);
@@ -482,20 +509,20 @@ public class XMLConfigBuilder extends BaseBuilder {
           String resource = child.getStringAttribute("resource");
           String url = child.getStringAttribute("url");
           String mapperClass = child.getStringAttribute("class");
-          if (resource != null && url == null && mapperClass == null) {
+          if (resource != null && url == null && mapperClass == null) { //s resource
             ErrorContext.instance().resource(resource);
             InputStream inputStream = Resources.getResourceAsStream(resource);
             //s 解析映射文件
             XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, resource, configuration.getSqlFragments());
             mapperParser.parse();
-          } else if (resource == null && url != null && mapperClass == null) {
+          } else if (resource == null && url != null && mapperClass == null) { //s url
             ErrorContext.instance().resource(url);
             InputStream inputStream = Resources.getUrlAsStream(url);
             XMLMapperBuilder mapperParser = new XMLMapperBuilder(inputStream, configuration, url, configuration.getSqlFragments());
             mapperParser.parse();
-          } else if (resource == null && url == null && mapperClass != null) {
+          } else if (resource == null && url == null && mapperClass != null) { //s class
             Class<?> mapperInterface = Resources.classForName(mapperClass);
-            //s 也会查找对应的映射文件xml
+            //s  解析注解@Cache 以及方法上的 @Select 并且查找对应的xml映射文件 解析
             configuration.addMapper(mapperInterface);
           } else {
             throw new BuilderException("A mapper element may only specify a url, resource or class, but not more than one.");

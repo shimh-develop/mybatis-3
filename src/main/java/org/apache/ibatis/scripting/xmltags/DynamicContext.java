@@ -50,6 +50,7 @@ public class DynamicContext {
     } else {
       bindings = new ContextMap(null, false);
     }
+    //s _parameter ，在有的 SqlNode 实现中直接使用了该字画位
     bindings.put(PARAMETER_OBJECT_KEY, parameterObject);
     bindings.put(DATABASE_ID_KEY, configuration.getDatabaseId());
   }

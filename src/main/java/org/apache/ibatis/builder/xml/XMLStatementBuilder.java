@@ -64,17 +64,22 @@ public class XMLStatementBuilder extends BaseBuilder {
     //s select|insert|update|delete
     String nodeName = context.getNode().getNodeName();
     SqlCommandType sqlCommandType = SqlCommandType.valueOf(nodeName.toUpperCase(Locale.ENGLISH));
+
     boolean isSelect = sqlCommandType == SqlCommandType.SELECT;
     //s insert|update|delete 的 flushCache 默认 true 导致本地缓存和二级缓存被清空
     boolean flushCache = context.getBooleanAttribute("flushCache", !isSelect);
+
     //s select useCache 默认 true 导致本条语句的结果被二级缓存缓存起来
     boolean useCache = context.getBooleanAttribute("useCache", isSelect);
+
     boolean resultOrdered = context.getBooleanAttribute("resultOrdered", false);
 
     // Include Fragments before parsing
-    //s 处理其中的 <include> 节点 找到对应的<sql> 进行替换
+    //s 处理其中的 <include> 节点 找到对应的<sql> 进行替换 ，并将其中的“${ xxx ｝”占位符
+    //替换成真实的参数
     XMLIncludeTransformer includeParser = new XMLIncludeTransformer(configuration, builderAssistant);
     includeParser.applyIncludes(context.getNode());
+
     //s 语句的参数的类全限定名或别名
     String parameterType = context.getStringAttribute("parameterType");
     Class<?> parameterTypeClass = resolveClass(parameterType);
@@ -117,9 +122,11 @@ public class XMLStatementBuilder extends BaseBuilder {
           ? Jdbc3KeyGenerator.INSTANCE : NoKeyGenerator.INSTANCE;
     }
 
-    //s 解析动态标签if choose (when, otherwise) trim (where, set) foreach
+    //s 解析动态标签if choose (when, otherwise) trim (where, set) foreach  XMLLanguageDriver
     SqlSource sqlSource = langDriver.createSqlSource(configuration, context, parameterTypeClass);
+
     StatementType statementType = StatementType.valueOf(context.getStringAttribute("statementType", StatementType.PREPARED.toString()));
+
     Integer fetchSize = context.getIntAttribute("fetchSize");
     Integer timeout = context.getIntAttribute("timeout");
     String parameterMap = context.getStringAttribute("parameterMap");

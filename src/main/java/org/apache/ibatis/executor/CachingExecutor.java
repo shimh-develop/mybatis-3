@@ -78,8 +78,11 @@ public class CachingExecutor implements Executor {
 
   @Override
   public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler) throws SQLException {
+    //s 定义的sql与 带？和对应的名称
     BoundSql boundSql = ms.getBoundSql(parameterObject);
+    //s 创建key
     CacheKey key = createCacheKey(ms, parameterObject, rowBounds, boundSql);
+
     return query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
   }
 
@@ -95,7 +98,7 @@ public class CachingExecutor implements Executor {
     //s 获取查询语句所在命名空间对应的二级缓存
     Cache cache = ms.getCache();
     if (cache != null) {
-      //s 根据＜ select ＞节 点的配置，决定是否需妥清空二级缓存
+      //s 根据＜ select ＞节 点的配置，决定是否需妥清空二级缓存   只是添加了标识 需要提交时才真正删除
       flushCacheIfRequired(ms);
       if (ms.isUseCache() && resultHandler == null) {
         ensureNoOutParams(ms, boundSql);

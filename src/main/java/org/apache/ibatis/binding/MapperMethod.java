@@ -62,6 +62,13 @@ public class MapperMethod {
       case INSERT: {
         //s 使 ParamNameResolver 处理 args ［］数量且（用户传入的实参列表），将用户传入的 实参与
         // 指定参数名称关联起来
+        /**
+         *
+         * add(int a, @Param("name")int b)
+         * add(100,200)
+         *
+         * {(0,100),("param1",100),("name",200),("param2",200)}
+         */
         Object param = method.convertArgsToSqlCommandParam(args);
         //s 调用 SqlSession.insert（）方法， rowCountResult （）方法会根据 method 字段中记录的方法的
         // 返回值类型对结果进行转换
